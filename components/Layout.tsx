@@ -1,125 +1,126 @@
-import React, { useState } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+
+import React, { useState, useEffect } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useStore } from '../services/store';
-import { 
-  LayoutDashboard, 
-  Ticket, 
-  Settings, 
-  Box, 
-  Wrench, 
-  LogOut, 
-  Menu, 
-  X,
-  Bell
-} from 'lucide-react';
+import { supabase } from '../services/supabase';
+import Sidebar from './Sidebar';
+import PullToRefresh from './PullToRefresh';
+import { Menu, Bell, Search, Megaphone, X } from 'lucide-react';
 
 const Layout: React.FC = () => {
-  const { user, logout } = useStore();
-  const navigate = useNavigate();
+  const { user, logout, fetchSystemMetadata } = useStore();
   const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [announcement, setAnnouncement] = useState<any>(null);
+  const location = useLocation();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  useEffect(() => {
+    fetchActiveAnnouncement();
+  }, [location.pathname]); // Re-check on nav change
+
+  const fetchActiveAnnouncement = async () => {
+    if (!user) return;
+    
+    // Fetch latest active announcement targeted at this user
+    const { data } = await supabase
+      .from('announcements')
+      .select('*')
+      .eq('is_active', true)
+      .or(`target_audience.eq.ALL,target_audience.eq.${user.role}`)
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (data && data.length > 0) {
+      // Simple check to see if user dismissed it locally (could use localStorage)
+      const dismissed = localStorage.getItem(`dismissed_announcement_${data[0].id}`);
+      if (!dismissed) {
+        setAnnouncement(data[0]);
+      }
+    }
   };
 
-  const navItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
-    { icon: Ticket, label: 'Tickets', path: '/tickets' },
-    { icon: Wrench, label: 'Assets', path: '/assets' },
-    { icon: Box, label: 'Inventory', path: '/inventory' },
-  ];
+  const dismissAnnouncement = () => {
+    if (announcement) {
+      localStorage.setItem(`dismissed_announcement_${announcement.id}`, 'true');
+      setAnnouncement(null);
+    }
+  };
 
-  if (user?.role === 'ADMIN') {
-    navItems.push({ icon: Settings, label: 'Settings', path: '/settings' });
-  }
+  const handleRefresh = async () => {
+    await fetchSystemMetadata();
+  };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Mobile Sidebar Overlay */}
-      {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 z-20 bg-black/50 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+    <div className="flex h-screen bg-gray-50 overflow-hidden font-cairo" dir="rtl">
+      
+      <Sidebar 
+        isOpen={isSidebarOpen} 
+        setIsOpen={setSidebarOpen} 
+        user={user} 
+        logout={logout} 
+      />
 
-      {/* Sidebar */}
-      <aside 
-        className={`fixed inset-y-0 left-0 z-30 w-64 bg-slate-900 text-white transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <div className="flex items-center justify-between h-16 px-6 bg-slate-950">
-          <span className="text-xl font-bold tracking-wider text-blue-400">B.LABAN EMS</span>
-          <button 
-            onClick={() => setSidebarOpen(false)} 
-            className="lg:hidden text-gray-400 hover:text-white"
-          >
-            <X size={24} />
-          </button>
-        </div>
-
-        <nav className="p-4 space-y-2">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              onClick={() => setSidebarOpen(false)}
-              className={({ isActive }) =>
-                `flex items-center px-4 py-3 rounded-lg transition-colors ${
-                  isActive 
-                    ? 'bg-blue-600 text-white shadow-lg' 
-                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                }`
-              }
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+        {/* Top Header */}
+        <header className="flex items-center justify-between h-16 px-6 bg-white border-b border-gray-200 shadow-sm z-20 relative shrink-0">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setSidebarOpen(true)}
+              className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-md"
             >
-              <item.icon size={20} className="mr-3" />
-              <span className="font-medium">{item.label}</span>
-            </NavLink>
-          ))}
-        </nav>
-
-        <div className="absolute bottom-0 w-full p-4 border-t border-slate-800">
-          <div className="flex items-center mb-4 px-2">
-            <img src={user?.avatar} alt="User" className="w-10 h-10 rounded-full mr-3 border-2 border-slate-700" />
-            <div>
-              <p className="text-sm font-medium text-white">{user?.name}</p>
-              <p className="text-xs text-slate-400 capitalize">{user?.role?.toLowerCase()}</p>
+              <Menu size={24} />
+            </button>
+            <div className="hidden md:flex items-center bg-gray-100 rounded-lg px-3 py-1.5 w-64">
+               <Search size={18} className="text-gray-400 ml-2" />
+               <input 
+                 type="text" 
+                 placeholder="بحث سريع..." 
+                 className="bg-transparent border-none outline-none text-sm w-full"
+               />
             </div>
           </div>
-          <button 
-            onClick={handleLogout}
-            className="flex items-center justify-center w-full px-4 py-2 text-sm text-red-400 bg-red-400/10 rounded-lg hover:bg-red-400/20 transition-colors"
-          >
-            <LogOut size={16} className="mr-2" />
-            Sign Out
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <header className="flex items-center justify-between h-16 px-6 bg-white border-b border-gray-200 shadow-sm">
-          <button 
-            onClick={() => setSidebarOpen(true)}
-            className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-md"
-          >
-            <Menu size={24} />
-          </button>
           
-          <div className="flex items-center ml-auto space-x-4">
-            <button className="relative p-2 text-gray-400 hover:text-gray-600 transition-colors">
+          <div className="flex items-center gap-4">
+            <div className="text-left hidden sm:block">
+               <p className="text-xs text-gray-400">آخر تحديث</p>
+               <p className="text-sm font-medium dir-ltr">{new Date().toLocaleTimeString('en-US', {hour: '2-digit', minute:'2-digit'})}</p>
+            </div>
+            <div className="h-8 w-px bg-gray-200 hidden sm:block"></div>
+            <button className="relative p-2 text-gray-500 hover:text-blue-600 transition-colors bg-gray-50 hover:bg-blue-50 rounded-full">
               <Bell size={20} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
+              <span className="absolute top-1.5 left-1.5 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
             </button>
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
-          <Outlet />
+        {/* Global Announcement Banner */}
+        {announcement && (
+          <div className={`px-4 py-3 text-white flex justify-between items-center shadow-md animate-in slide-in-from-top z-10 shrink-0 ${
+            announcement.priority === 'CRITICAL' ? 'bg-red-600' : 'bg-indigo-600'
+          }`}>
+             <div className="flex items-center gap-3">
+                <div className="bg-white/20 p-1.5 rounded-full">
+                   <Megaphone size={18} className="text-white" />
+                </div>
+                <div>
+                   <span className="font-bold text-sm ml-2">{announcement.title}:</span>
+                   <span className="text-sm opacity-90">{announcement.body}</span>
+                </div>
+             </div>
+             <button onClick={dismissAnnouncement} className="text-white/70 hover:text-white p-1 hover:bg-white/10 rounded">
+                <X size={18} />
+             </button>
+          </div>
+        )}
+
+        {/* Page Content Wrapped in PullToRefresh */}
+        <main className="flex-1 overflow-hidden relative">
+          <PullToRefresh onRefresh={handleRefresh}>
+            <div className="p-6 animate-fade-in-up pb-24 lg:pb-6">
+              <Outlet />
+            </div>
+          </PullToRefresh>
         </main>
       </div>
     </div>

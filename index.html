@@ -1,23 +1,57 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>B.Laban EMS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#1e40af" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>بي لبن - نظام الصيانة</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-      body {
-        font-family: 'Inter', sans-serif;
-        background-color: #f3f4f6;
+      @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap');
+      
+      :root {
+        --sat: env(safe-area-inset-top);
+        --sab: env(safe-area-inset-bottom);
+        --sal: env(safe-area-inset-left);
+        --sar: env(safe-area-inset-right);
       }
+
+      html, body {
+        height: 100%;
+        width: 100%;
+        overflow: hidden; /* Prevent body scroll, handle in app layout */
+        overscroll-behavior-y: none; /* Disable browser pull-to-refresh */
+        -webkit-tap-highlight-color: transparent; /* Remove blue tap box on iOS */
+        -webkit-touch-callout: none; /* Disable callout menu */
+      }
+
+      body {
+        font-family: 'Cairo', sans-serif;
+        background-color: #f3f4f6;
+        padding-top: var(--sat);
+        /* We remove bottom padding here and let individual views handle it to avoid double padding with navbars */
+      }
+
+      /* Disable Text Selection for App-like feel, allow on inputs */
+      * {
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      input, textarea, [contenteditable="true"] {
+        user-select: text;
+        -webkit-user-select: text;
+      }
+
       /* Custom Scrollbar */
       ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
+        width: 6px;
+        height: 6px;
       }
       ::-webkit-scrollbar-track {
-        background: #f1f1f1; 
+        background: transparent; 
       }
       ::-webkit-scrollbar-thumb {
         background: #cbd5e1; 
@@ -33,16 +67,24 @@
     "react-router-dom": "https://esm.sh/react-router-dom@^7.13.0",
     "react/": "https://esm.sh/react@^19.2.4/",
     "react": "https://esm.sh/react@^19.2.4",
+    "react-dom": "https://esm.sh/react-dom@^19.2.4",
     "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
     "lucide-react": "https://esm.sh/lucide-react@^0.574.0",
     "@google/genai": "https://esm.sh/@google/genai@^1.41.0",
     "recharts": "https://esm.sh/recharts@^3.7.0",
-    "zustand": "https://esm.sh/zustand@^5.0.11"
+    "zustand": "https://esm.sh/zustand@^5.0.11",
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@^2.97.0",
+    "vite": "https://esm.sh/vite@^7.3.1",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4",
+    "vite-plugin-pwa": "https://esm.sh/vite-plugin-pwa@^1.2.0",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.0/package/xlsx.mjs",
+    "react-window": "https://esm.sh/react-window@1.8.10?external=react,react-dom",
+    "@react-google-maps/api": "https://esm.sh/@react-google-maps/api@2.19.2?external=react,react-dom"
   }
 }
 </script>
 </head>
   <body>
-    <div id="root"></div>
+    <div id="root" style="height: 100%;"></div>
   </body>
 </html>

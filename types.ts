@@ -1,3 +1,4 @@
+
 export type Role = 'ADMIN' | 'MANAGER' | 'TECHNICIAN';
 
 export interface User {
@@ -8,6 +9,12 @@ export interface User {
   branchId?: string;
 }
 
+export interface Notification {
+  id: string;
+  type: 'success' | 'error' | 'info';
+  message: string;
+}
+
 export interface Asset {
   id: string;
   name: string;
@@ -16,6 +23,8 @@ export interface Asset {
   status: 'ACTIVE' | 'BROKEN' | 'MAINTENANCE' | 'SCRAPPED';
   purchaseDate: string;
   warrantyExpiry: string;
+  supplier: string; // New: Supplier Name
+  supplierContact: string; // New: Phone/Email
   initialValue: number;
   branchId: string;
   location: string;
@@ -39,6 +48,11 @@ export interface Ticket {
   location: { lat: number; lng: number };
   formData?: Record<string, any>;
   diagnosis?: string;
+  closedAt?: string;
+  rating?: number; // 1-5
+  feedback?: string; // Manager feedback
+  faultType?: string; // New: Type of fault
+  imageUrl?: string; // New: Image of the fault
 }
 
 export interface Part {
@@ -52,14 +66,25 @@ export interface Part {
 }
 
 // Dynamic Form Types
-export type FieldType = 'text' | 'number' | 'textarea' | 'select' | 'checkbox' | 'date';
+export type FieldType = 
+  | 'text' 
+  | 'paragraph' // نص طويل
+  | 'number' 
+  | 'quantity' // كمية
+  | 'select' // قائمة منسدلة
+  | 'radio' // اختيار من متعدد
+  | 'checkbox' 
+  | 'date' 
+  | 'image' 
+  | 'video' // فيديو
+  | 'location'; // موقع
 
 export interface FormField {
   key: string;
   label: string;
   type: FieldType;
   required: boolean;
-  options?: string[]; // For select inputs
+  options?: string[]; // For select & radio inputs
   placeholder?: string;
   description?: string;
 }
@@ -72,7 +97,17 @@ export interface UISchema {
 
 export interface SystemConfig {
   geofenceRadius: number; // meters
+  technicianRange: number; // km
   slaHighPriorityHours: number;
+  slaMediumPriorityHours: number;
+  slaLowPriorityHours: number;
   maxImageCount: number;
   enableAIAnalysis: boolean;
+  maintenanceMode: boolean;
+}
+
+export interface Permission {
+  role: Role;
+  key: string;
+  isAllowed: boolean;
 }

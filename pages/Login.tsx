@@ -1,10 +1,10 @@
+
 import React from 'react';
 import { useStore } from '../services/store';
-import { MOCK_USERS } from '../constants';
 import { ShieldCheck } from 'lucide-react';
 
 const Login: React.FC = () => {
-  const { login } = useStore();
+  const { login, users } = useStore();
 
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
@@ -18,21 +18,25 @@ const Login: React.FC = () => {
         </div>
         
         <div className="p-8">
-          <h2 className="text-lg font-semibold text-gray-800 mb-6 text-center">Select User Persona</h2>
+          <h2 className="text-lg font-semibold text-gray-800 mb-6 text-center">اختر المستخدم للدخول</h2>
           <div className="space-y-3">
-            {MOCK_USERS.map((user) => (
-              <button
-                key={user.id}
-                onClick={() => login(user.id)}
-                className="w-full flex items-center p-4 border border-gray-200 rounded-xl hover:bg-blue-50 hover:border-blue-200 transition-all group"
-              >
-                <img src={user.avatar} alt={user.name} className="w-12 h-12 rounded-full mr-4 border border-gray-200" />
-                <div className="text-left">
-                  <p className="font-semibold text-gray-800 group-hover:text-blue-700">{user.name}</p>
-                  <p className="text-xs text-gray-500 uppercase tracking-wide">{user.role}</p>
-                </div>
-              </button>
-            ))}
+            {users.length === 0 ? (
+              <p className="text-center text-gray-500 py-4">جاري تحميل المستخدمين...</p>
+            ) : (
+              users.map((user) => (
+                <button
+                  key={user.id}
+                  onClick={() => login(user.id)}
+                  className="w-full flex items-center p-4 border border-gray-200 rounded-xl hover:bg-blue-50 hover:border-blue-200 transition-all group"
+                >
+                  <img src={user.avatar} alt={user.name} className="w-12 h-12 rounded-full mr-4 border border-gray-200 bg-gray-100" />
+                  <div className="text-left flex-1">
+                    <p className="font-semibold text-gray-800 group-hover:text-blue-700">{user.name}</p>
+                    <p className="text-xs text-gray-500 uppercase tracking-wide">{user.role}</p>
+                  </div>
+                </button>
+              ))
+            )}
           </div>
         </div>
       </div>
